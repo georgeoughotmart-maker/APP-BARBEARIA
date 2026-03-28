@@ -13,7 +13,14 @@ export function Auth({ store }: { store: any }) {
       showToast('Login efetuado com sucesso!');
     } catch (error: any) {
       console.error('Login error:', error);
-      showToast('Erro ao fazer login. Tente novamente.', 'err');
+      if (error.code === 'auth/unauthorized-domain') {
+        showToast('Erro: Domínio da Vercel não autorizado no Firebase!', 'err');
+        alert('Para funcionar na Vercel, você precisa adicionar o seu link da Vercel nos "Domínios Autorizados" dentro do painel do Firebase Authentication.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        showToast('Login cancelado.', 'info');
+      } else {
+        showToast(`Erro ao fazer login: ${error.message}`, 'err');
+      }
     }
   };
 
