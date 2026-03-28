@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the Barber Manager application.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Agendamento": {
+      "title": "Agendamento",
+      "description": "An appointment in the barbershop.",
+      "type": "object",
+      "properties": {
+        "cliente": { "type": "string" },
+        "servico": { "type": "string" },
+        "valor": { "type": "number" },
+        "data": { "type": "string" },
+        "hora": { "type": "string" },
+        "obs": { "type": "string" },
+        "status": { "type": "string", "enum": ["pendente", "concluido", "cancelado"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["cliente", "servico", "valor", "data", "hora", "status", "createdAt"]
+    },
+    "Transacao": {
+      "title": "Transacao",
+      "description": "A financial transaction (income or expense).",
+      "type": "object",
+      "properties": {
+        "desc": { "type": "string" },
+        "valor": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["desc", "valor", "createdAt"]
+    },
+    "Config": {
+      "title": "Config",
+      "description": "User configuration settings.",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "cor": { "type": "string" },
+        "servicos": { "type": "string" },
+        "logo": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "/users/{userId}/agendamentos/{agendamentoId}": {
+      "schema": { "$ref": "#/entities/Agendamento" },
+      "description": "User's appointments."
+    },
+    "/users/{userId}/ganhos/{ganhoId}": {
+      "schema": { "$ref": "#/entities/Transacao" },
+      "description": "User's income transactions."
+    },
+    "/users/{userId}/custos/{custoId}": {
+      "schema": { "$ref": "#/entities/Transacao" },
+      "description": "User's expense transactions."
+    },
+    "/users/{userId}/config/main": {
+      "schema": { "$ref": "#/entities/Config" },
+      "description": "User's configuration."
+    }
+  }
+}

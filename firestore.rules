@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(allowedFields) {
+      return request.resource.data.keys().hasOnly(allowedFields);
+    }
+
+    function isValidString(field, minLen, maxLen) {
+      return request.resource.data[field] is string && 
+             request.resource.data[field].size() >= minLen && 
+             request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) || 
+             (request.resource.data[field] is string && 
+              request.resource.data[field].size() >= minLen && 
+              request.resource.data[field].size() <= maxLen);
+    }
+
+    function isValidNumber(field) {
+      return request.resource.data[field] is number;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser() {
+      return hasOnlyAllowedFields(['email', 'name', 'createdAt']) &&
+             isValidString('email', 3, 100) &&
+             isValidOptionalString('name', 0, 100) &&
+             request.resource.data.createdAt is string;
+    }
+
+    function isValidAgendamento() {
+      return hasOnlyAllowedFields(['cliente', 'servico', 'valor', 'data', 'hora', 'obs', 'status', 'createdAt']) &&
+             isValidString('cliente', 1, 100) &&
+             isValidString('servico', 1, 100) &&
+             isValidNumber('valor') &&
+             isValidString('data', 1, 20) &&
+             isValidString('hora', 1, 10) &&
+             isValidOptionalString('obs', 0, 500) &&
+             request.resource.data.status in ['pendente', 'concluido', 'cancelado'] &&
+             request.resource.data.createdAt is string;
+    }
+
+    function isValidTransacao() {
+      return hasOnlyAllowedFields(['desc', 'valor', 'createdAt']) &&
+             isValidString('desc', 1, 100) &&
+             isValidNumber('valor') &&
+             request.resource.data.createdAt is string;
+    }
+
+    function isValidConfig() {
+      return hasOnlyAllowedFields(['nome', 'cor', 'servicos', 'logo', 'updatedAt']) &&
+             isValidOptionalString('nome', 0, 100) &&
+             isValidOptionalString('cor', 0, 20) &&
+             isValidOptionalString('servicos', 0, 2000) &&
+             isValidOptionalString('logo', 0, 3000000) && // Up to 3MB for base64 logo
+             (!( 'updatedAt' in request.resource.data ) || request.resource.data.updatedAt is string);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser();
+      allow update: if isOwner(userId) && isValidUser() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isOwner(userId);
+
+      match /agendamentos/{agendamentoId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidAgendamento();
+        allow update: if isOwner(userId) && isValidAgendamento() && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(userId);
+      }
+
+      match /ganhos/{ganhoId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidTransacao();
+        allow update: if isOwner(userId) && isValidTransacao() && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(userId);
+      }
+
+      match /custos/{custoId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidTransacao();
+        allow update: if isOwner(userId) && isValidTransacao() && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(userId);
+      }
+
+      match /config/main {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidConfig();
+        allow update: if isOwner(userId) && isValidConfig();
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}
