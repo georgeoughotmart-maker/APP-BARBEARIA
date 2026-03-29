@@ -104,7 +104,7 @@ export function useAppStore() {
 
     for (const ag of resolved) {
       const docRef = doc(db, `users/${uid}/agendamentos/${ag.id}`);
-      const data = { ...ag };
+      const { id, ...data } = ag;
       if (!data.createdAt) data.createdAt = new Date().toISOString();
       await setDoc(docRef, data, { merge: true }).catch(console.error);
     }
@@ -126,7 +126,7 @@ export function useAppStore() {
 
     for (const g of resolved) {
       const docRef = doc(db, `users/${uid}/ganhos/${g.id}`);
-      const data = { ...g };
+      const { id, ...data } = g;
       if (!data.createdAt) data.createdAt = new Date().toISOString();
       await setDoc(docRef, data, { merge: true }).catch(console.error);
     }
@@ -148,7 +148,7 @@ export function useAppStore() {
 
     for (const c of resolved) {
       const docRef = doc(db, `users/${uid}/custos/${c.id}`);
-      const data = { ...c };
+      const { id, ...data } = c;
       if (!data.createdAt) data.createdAt = new Date().toISOString();
       await setDoc(docRef, data, { merge: true }).catch(console.error);
     }

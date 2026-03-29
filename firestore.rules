@@ -53,7 +53,7 @@ service cloud.firestore {
              isValidString('servico', 1, 100) &&
              isValidNumber('valor') &&
              isValidString('data', 1, 20) &&
-             isValidString('hora', 1, 10) &&
+             isValidString('hora', 0, 10) &&
              isValidOptionalString('obs', 0, 500) &&
              request.resource.data.status in ['pendente', 'concluido', 'cancelado'] &&
              request.resource.data.createdAt is string;
