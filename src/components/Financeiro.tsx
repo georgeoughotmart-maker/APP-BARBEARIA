@@ -24,7 +24,7 @@ export function Financeiro({ store }: { store: any }) {
     if (!desc) { showToast('Informe a descrição', 'err'); return; }
     if (!valor || valor <= 0) { showToast('Informe um valor válido', 'err'); return; }
     
-    setGanhos([...ganhos, { id: crypto.randomUUID(), desc, valor }]);
+    setGanhos([...ganhos, { id: crypto.randomUUID(), desc, valor, createdAt: new Date().toISOString() }]);
     setGanhoDesc('');
     setGanhoValor('');
     showToast('Ganho adicionado!');
@@ -36,7 +36,7 @@ export function Financeiro({ store }: { store: any }) {
     if (!desc) { showToast('Informe a descrição', 'err'); return; }
     if (!valor || valor <= 0) { showToast('Informe um valor válido', 'err'); return; }
     
-    setCustos([...custos, { id: crypto.randomUUID(), desc, valor }]);
+    setCustos([...custos, { id: crypto.randomUUID(), desc, valor, createdAt: new Date().toISOString() }]);
     setCustoDesc('');
     setCustoValor('');
     showToast('Custo adicionado!');

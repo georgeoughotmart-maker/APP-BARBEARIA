@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../lib/ToastContext';
-import { Save, Download, Trash2, X, Plus, Upload } from 'lucide-react';
+import { Save, Download, Trash2, X, Plus, Upload, Copy, ExternalLink } from 'lucide-react';
+import { DiaFuncionamento } from '../lib/store';
 
 export function Configuracoes({ store }: { store: any }) {
   const { config, setConfig, agendamentos, ganhos, custos, setAgendamentos, setGanhos, setCustos } = store;
@@ -12,12 +13,27 @@ export function Configuracoes({ store }: { store: any }) {
   const [logo, setLogo] = useState(config.logo || '');
   const [servicosList, setServicosList] = useState<string[]>((config.servicos || 'Corte\nBarba\nCorte + Barba\nPezinho\nSobrancelha').split('\n').filter(Boolean));
   const [novoServico, setNovoServico] = useState('');
+  
+  const [funcionamento, setFuncionamento] = useState<Record<number, DiaFuncionamento>>(config.funcionamento || {
+    0: { ativo: false, inicio: '09:00', fim: '18:00' },
+    1: { ativo: true, inicio: '09:00', fim: '18:00' },
+    2: { ativo: true, inicio: '09:00', fim: '18:00' },
+    3: { ativo: true, inicio: '09:00', fim: '18:00' },
+    4: { ativo: true, inicio: '09:00', fim: '18:00' },
+    5: { ativo: true, inicio: '09:00', fim: '19:00' },
+    6: { ativo: true, inicio: '09:00', fim: '14:00' },
+  });
+  const [intervaloMinutos, setIntervaloMinutos] = useState(config.intervaloMinutos || 30);
+
+  const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   useEffect(() => {
     setNome(config.nome || '');
     setCor(config.cor || '#c9a84c');
     setLogo(config.logo || '');
     setServicosList((config.servicos || 'Corte\nBarba\nCorte + Barba\nPezinho\nSobrancelha').split('\n').filter(Boolean));
+    if (config.funcionamento) setFuncionamento(config.funcionamento);
+    if (config.intervaloMinutos) setIntervaloMinutos(config.intervaloMinutos);
   }, [config]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,9 +70,17 @@ export function Configuracoes({ store }: { store: any }) {
       nome: nome.trim(),
       cor,
       logo,
-      servicos: servicosList.join('\n')
+      servicos: servicosList.join('\n'),
+      funcionamento,
+      intervaloMinutos
     });
     showToast('Configurações salvas!');
+  };
+
+  const copyPublicLink = () => {
+    const link = `${window.location.origin}/agendar/${store.currentUser?.uid}`;
+    navigator.clipboard.writeText(link);
+    showToast('Link copiado para a área de transferência!');
   };
 
   const exportarDados = () => {
@@ -87,6 +111,35 @@ export function Configuracoes({ store }: { store: any }) {
 
       <div className="bg-surface border border-border rounded-xl p-6 max-w-[560px]">
         
+        {/* Link Público */}
+        <div className="flex flex-col py-4 border-b border-border">
+          <div className="mb-3">
+            <div className="text-sm font-medium text-gold">Agendamento Online (Link Público)</div>
+            <div className="text-xs text-text-muted mt-0.5">Envie este link para seus clientes agendarem sozinhos</div>
+          </div>
+          <div className="flex gap-2">
+            <input 
+              readOnly
+              value={`${window.location.origin}/agendar/${store.currentUser?.uid}`}
+              className="flex-1 bg-surface2 border border-border text-text px-3 py-2 rounded-lg text-sm outline-none opacity-70"
+            />
+            <button 
+              onClick={copyPublicLink}
+              className="bg-surface2 border border-border text-text px-3 py-2 rounded-lg text-sm hover:border-gold hover:text-gold transition-colors flex items-center gap-1.5"
+            >
+              <Copy className="w-4 h-4" /> Copiar
+            </button>
+            <a 
+              href={`/agendar/${store.currentUser?.uid}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gold text-black px-3 py-2 rounded-lg text-sm hover:brightness-110 transition-colors flex items-center gap-1.5 font-medium"
+            >
+              <ExternalLink className="w-4 h-4" /> Abrir
+            </a>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between py-4 border-b border-border">
           <div>
             <div className="text-sm font-medium">Logo da barbearia</div>
@@ -183,6 +236,66 @@ export function Configuracoes({ store }: { store: any }) {
             {servicosList.length === 0 && (
               <div className="text-xs text-text-muted italic py-2">Nenhum serviço cadastrado.</div>
             )}
+          </div>
+        </div>
+
+        <div className="flex flex-col py-4 border-t border-border">
+          <div className="mb-4">
+            <div className="text-sm font-medium">Horários de Funcionamento</div>
+            <div className="text-xs text-text-muted mt-0.5">Defina os dias e horários que a barbearia está aberta</div>
+          </div>
+
+          <div className="flex items-center justify-between mb-4 bg-surface2 p-3 rounded-lg border border-border">
+            <div className="text-sm">Duração de cada agendamento</div>
+            <select 
+              value={intervaloMinutos}
+              onChange={(e) => setIntervaloMinutos(Number(e.target.value))}
+              className="bg-surface border border-border text-text px-3 py-1.5 rounded-lg text-sm outline-none focus:border-gold"
+            >
+              <option value={15}>15 minutos</option>
+              <option value={30}>30 minutos</option>
+              <option value={45}>45 minutos</option>
+              <option value={60}>1 hora</option>
+            </select>
+          </div>
+
+          <div className="space-y-3">
+            {diasSemana.map((dia, index) => {
+              const func = funcionamento[index];
+              return (
+                <div key={index} className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 w-28 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={func.ativo}
+                      onChange={(e) => setFuncionamento({...funcionamento, [index]: { ...func, ativo: e.target.checked }})}
+                      className="accent-gold w-4 h-4 cursor-pointer"
+                    />
+                    <span className={`text-sm ${func.ativo ? 'text-text' : 'text-text-muted'}`}>{dia}</span>
+                  </label>
+                  
+                  {func.ativo ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <input 
+                        type="time" 
+                        value={func.inicio}
+                        onChange={(e) => setFuncionamento({...funcionamento, [index]: { ...func, inicio: e.target.value }})}
+                        className="bg-surface2 border border-border text-text px-2 py-1 rounded text-sm outline-none focus:border-gold w-24"
+                      />
+                      <span className="text-text-muted text-sm">até</span>
+                      <input 
+                        type="time" 
+                        value={func.fim}
+                        onChange={(e) => setFuncionamento({...funcionamento, [index]: { ...func, fim: e.target.value }})}
+                        className="bg-surface2 border border-border text-text px-2 py-1 rounded text-sm outline-none focus:border-gold w-24"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-sm text-text-muted italic flex-1">Fechado</div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

@@ -67,12 +67,14 @@ service cloud.firestore {
     }
 
     function isValidConfig() {
-      return hasOnlyAllowedFields(['nome', 'cor', 'servicos', 'logo', 'updatedAt']) &&
+      return hasOnlyAllowedFields(['nome', 'cor', 'servicos', 'logo', 'updatedAt', 'funcionamento', 'intervaloMinutos']) &&
              isValidOptionalString('nome', 0, 100) &&
              isValidOptionalString('cor', 0, 20) &&
              isValidOptionalString('servicos', 0, 2000) &&
-             isValidOptionalString('logo', 0, 3000000) && // Up to 3MB for base64 logo
-             (!( 'updatedAt' in request.resource.data ) || request.resource.data.updatedAt is string);
+             isValidOptionalString('logo', 0, 3000000) &&
+             (!( 'updatedAt' in request.resource.data ) || request.resource.data.updatedAt is string) &&
+             (!( 'intervaloMinutos' in request.resource.data ) || request.resource.data.intervaloMinutos is number) &&
+             (!( 'funcionamento' in request.resource.data ) || request.resource.data.funcionamento is map);
     }
 
     // ===============================================================
@@ -87,8 +89,17 @@ service cloud.firestore {
 
       match /agendamentos/{agendamentoId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId) && isValidAgendamento();
+        allow create: if isValidAgendamento();
         allow update: if isOwner(userId) && isValidAgendamento() && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner(userId);
+      }
+
+      match /public_slots/{slotId} {
+        allow read: if true;
+        allow create: if hasOnlyAllowedFields(['data', 'hora']) && 
+                      request.resource.data.data is string && 
+                      request.resource.data.hora is string;
+        allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
 
@@ -107,7 +118,7 @@ service cloud.firestore {
       }
 
       match /config/main {
-        allow read: if isOwner(userId);
+        allow read: if true;
         allow create: if isOwner(userId) && isValidConfig();
         allow update: if isOwner(userId) && isValidConfig();
         allow delete: if isOwner(userId);

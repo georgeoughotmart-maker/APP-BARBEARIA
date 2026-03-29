@@ -47,8 +47,20 @@
         "cor": { "type": "string" },
         "servicos": { "type": "string" },
         "logo": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "intervaloMinutos": { "type": "number" },
+        "funcionamento": { "type": "object" }
       }
+    },
+    "PublicSlot": {
+      "title": "PublicSlot",
+      "description": "Publicly visible booked slots.",
+      "type": "object",
+      "properties": {
+        "data": { "type": "string" },
+        "hora": { "type": "string" }
+      },
+      "required": ["data", "hora"]
     }
   },
   "firestore": {
@@ -71,6 +83,10 @@
     "/users/{userId}/config/main": {
       "schema": { "$ref": "#/entities/Config" },
       "description": "User's configuration."
+    },
+    "/users/{userId}/public_slots/{slotId}": {
+      "schema": { "$ref": "#/entities/PublicSlot" },
+      "description": "Publicly visible booked slots."
     }
   }
 }

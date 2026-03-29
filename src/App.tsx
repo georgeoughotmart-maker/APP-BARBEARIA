@@ -7,6 +7,7 @@ import { Agenda } from './components/Agenda';
 import { Financeiro } from './components/Financeiro';
 import { Configuracoes } from './components/Configuracoes';
 import { Auth } from './components/Auth';
+import { PublicBooking } from './components/PublicBooking';
 import { logout } from './lib/firebase';
 
 function lightenHex(hex: string, amt: number) {
@@ -18,6 +19,18 @@ function lightenHex(hex: string, amt: number) {
 }
 
 export default function App() {
+  const path = window.location.pathname;
+  if (path.startsWith('/agendar/')) {
+    const barberId = path.split('/')[2];
+    if (barberId) {
+      return (
+        <ToastProvider>
+          <PublicBooking barberId={barberId} />
+        </ToastProvider>
+      );
+    }
+  }
+
   return (
     <ToastProvider>
       <MainApp />

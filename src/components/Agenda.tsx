@@ -58,7 +58,7 @@ export function Agenda({ store }: { store: any }) {
     if (!formData.cliente.trim()) { showToast('Informe o nome do cliente', 'err'); return; }
     if (!formData.data) { showToast('Informe a data', 'err'); return; }
 
-    const ag = {
+    const ag: Agendamento = {
       id: editandoId || crypto.randomUUID(),
       cliente: formData.cliente.trim(),
       servico: formData.servico,
@@ -70,9 +70,14 @@ export function Agenda({ store }: { store: any }) {
     };
 
     if (editandoId) {
+      const existingAg = agendamentos.find((a: Agendamento) => a.id === editandoId);
+      if (existingAg && existingAg.createdAt) {
+        ag.createdAt = existingAg.createdAt;
+      }
       setAgendamentos(agendamentos.map((a: Agendamento) => a.id === editandoId ? ag : a));
       showToast('Agendamento atualizado!');
     } else {
+      ag.createdAt = new Date().toISOString();
       setAgendamentos([...agendamentos, ag]);
       showToast('Agendamento salvo!');
     }
